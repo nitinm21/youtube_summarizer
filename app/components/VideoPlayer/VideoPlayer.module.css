@@ -1,0 +1,17 @@
+.container {
+  width: 100%;
+}
+
+.playerWrapper {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background-color: #000;
+  box-shadow: var(--shadow-md);
+}
+
+.player {
+  width: 100%;
+  height: 100%;
+}
