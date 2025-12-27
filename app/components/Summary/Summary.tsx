@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import type { Summary as SummaryType, TimestampedPoint, SummarySection } from '@/lib/types';
 import styles from './Summary.module.css';
 
@@ -21,16 +21,45 @@ export function Summary({
 }: SummaryProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const activeSectionRef = useRef<HTMLDivElement>(null);
+  
+  // Track expanded sections by index
+  // Start with all collapsed to provide a cleaner initial view
+  const [expandedSections, setExpandedSections] = useState<Set<number>>(new Set());
 
-  // Auto-scroll to active section when follow mode is on
+  // Determine active section index
+  const activeSectionIndex = summary.sections.findIndex(
+    section => currentTime >= section.startTime && currentTime < section.endTime
+  );
+
+  // Auto-scroll and auto-expand active section when follow mode is on
   useEffect(() => {
-    if (followMode && activeSectionRef.current) {
-      activeSectionRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
+    if (followMode && activeSectionIndex !== -1) {
+      setExpandedSections(prev => {
+        const next = new Set(prev);
+        next.add(activeSectionIndex);
+        return next;
       });
+      
+      if (activeSectionRef.current) {
+        activeSectionRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+        });
+      }
     }
-  }, [currentTime, followMode]);
+  }, [currentTime, followMode, activeSectionIndex]);
+
+  function toggleSection(index: number) {
+    setExpandedSections(prev => {
+      const next = new Set(prev);
+      if (next.has(index)) {
+        next.delete(index);
+      } else {
+        next.add(index);
+      }
+      return next;
+    });
+  }
 
   function formatTimestamp(seconds: number): string {
     const h = Math.floor(seconds / 3600);
@@ -54,7 +83,10 @@ export function Summary({
     return (
       <button
         className={styles.timestampBadge}
-        onClick={() => onTimestampClick(timestamp)}
+        onClick={(e) => {
+          e.stopPropagation();
+          onTimestampClick(timestamp);
+        }}
         title={`Jump to ${formatTimestamp(timestamp)}`}
       >
         {formatTimestamp(timestamp)}
@@ -87,23 +119,39 @@ export function Summary({
   }
 
   function renderSection(section: SummarySection, index: number) {
-    const active = isActive(section.startTime, section.endTime);
+    const isTimeActive = index === activeSectionIndex;
+    const isExpanded = expandedSections.has(index);
 
     return (
       <div
         key={index}
-        ref={active ? activeSectionRef : undefined}
-        className={`${styles.section} ${active ? styles.activeSection : ''}`}
+        ref={isTimeActive ? activeSectionRef : undefined}
+        className={`${styles.section} ${isTimeActive ? styles.activeSection : ''} ${!isExpanded ? styles.collapsed : ''}`}
+        id={`section-${index}`}
       >
-        <div className={styles.sectionHeader}>
-          <h3 className={styles.sectionTitle}>{section.title}</h3>
+        <div 
+          className={styles.sectionHeader} 
+          onClick={() => toggleSection(index)}
+          title={isExpanded ? "Collapse section" : "Expand section"}
+        >
+          <div className={styles.sectionInfo}>
+            <div className={styles.sectionToggle}>
+               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+            <h3 className={styles.sectionTitle}>{section.title}</h3>
+          </div>
           <span className={styles.sectionTime}>
             {formatTimestamp(section.startTime)} - {formatTimestamp(section.endTime)}
           </span>
         </div>
-        <div className={styles.sectionPoints}>
-          {section.points.map((point, i) => renderPoint(point, i))}
-        </div>
+        
+        {isExpanded && (
+          <div className={styles.sectionPoints}>
+            {section.points.map((point, i) => renderPoint(point, i))}
+          </div>
+        )}
       </div>
     );
   }

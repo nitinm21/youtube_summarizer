@@ -91,6 +91,7 @@
   margin-bottom: var(--spacing-6);
 }
 
+/* Section Styles */
 .section {
   margin-bottom: var(--spacing-4);
   padding: var(--spacing-4);
@@ -98,6 +99,7 @@
   border: 1px solid var(--color-border);
   background: var(--color-surface);
   transition: all var(--transition-fast);
+  scroll-margin-top: 100px; /* For smooth scrolling offset */
 }
 
 .section.activeSection {
@@ -108,9 +110,39 @@
 .sectionHeader {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
-  margin-bottom: var(--spacing-3);
+  align-items: center;
   gap: var(--spacing-3);
+  cursor: pointer;
+  user-select: none;
+}
+
+.sectionHeader:hover .sectionTitle {
+  color: var(--color-accent);
+}
+
+.sectionInfo {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-3);
+  flex: 1;
+}
+
+.sectionToggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: var(--color-text-tertiary);
+  transition: transform var(--transition-fast), color var(--transition-fast);
+}
+
+.section.collapsed .sectionToggle {
+  transform: rotate(-90deg);
+}
+
+.activeSection .sectionToggle {
+  color: var(--color-accent);
 }
 
 .sectionTitle {
@@ -118,6 +150,7 @@
   font-weight: 600;
   color: var(--color-text-primary);
   letter-spacing: -0.01em;
+  transition: color var(--transition-fast);
 }
 
 .sectionTime {
@@ -131,6 +164,9 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-2);
+  margin-top: var(--spacing-3);
+  /* Animation for collapse/expand could be added here if we had height: auto transition, 
+     but simpler is display: none for now or conditional rendering in React */
 }
 
 .point {
