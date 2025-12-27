@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getVideoById, updateVideoSummary } from '@/lib/db/videos';
-import { generateSummary, generateSummaryForLongVideo } from '@/lib/openai/summarize';
+import { generateSummary, generateSummaryForLongVideo, generateChapterSummaries } from '@/lib/openai/summarize';
 import type { TranscriptSegment } from '@/lib/types';
 
 export async function POST(
@@ -48,7 +48,7 @@ export async function POST(
     // Generate summary using GPT-5.2
     // Use the long video handler for transcripts over 100k chars
     const fullText = transcript.map((s) => s.text).join(' ');
-    const summary = fullText.length > 100000
+    const baseSummary = fullText.length > 100000
       ? await generateSummaryForLongVideo({
           title: video.title,
           transcript,
@@ -59,6 +59,13 @@ export async function POST(
           transcript,
           userIntent: userIntent.trim(),
         });
+
+    // Generate chapter summaries using GPT-4o-mini (cheaper/faster)
+    const summary = await generateChapterSummaries(
+      baseSummary,
+      transcript,
+      userIntent.trim()
+    );
 
     // Save summary to database
     updateVideoSummary(id, userIntent.trim(), summary);

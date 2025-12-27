@@ -29,8 +29,11 @@ function getStoredTheme(): ThemePreference {
   return 'system';
 }
 
+interface ThemeToggleProps {
+  variant?: 'full' | 'compact';
+}
 
-export function ThemeToggle() {
+export function ThemeToggle({ variant = 'full' }: ThemeToggleProps) {
   const [preference, setPreference] = useState<ThemePreference>('system');
   const [systemTheme, setSystemTheme] = useState<ThemeMode>('light');
 
@@ -74,10 +77,18 @@ export function ThemeToggle() {
   }
 
   return (
-    <div className={styles.container}>
-      <span className={styles.label}>Theme</span>
+    <div
+      className={`${styles.container} ${
+        variant === 'compact' ? styles.compact : ''
+      }`}
+    >
+      {variant === 'full' ? (
+        <span className={styles.label}>Theme</span>
+      ) : null}
       <div className={styles.toggleRow}>
-        <span className={styles.modeText}>Light</span>
+        {variant === 'full' ? (
+          <span className={styles.modeText}>Light</span>
+        ) : null}
         <label className={styles.switch}>
           <input
             type="checkbox"
@@ -87,7 +98,9 @@ export function ThemeToggle() {
           />
           <span className={styles.slider} />
         </label>
-        <span className={styles.modeText}>Dark</span>
+        {variant === 'full' ? (
+          <span className={styles.modeText}>Dark</span>
+        ) : null}
       </div>
     </div>
   );

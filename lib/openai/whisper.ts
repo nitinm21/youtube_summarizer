@@ -89,7 +89,7 @@ export function checkAudioFileSize(filePath: string): {
     }
 
     return { valid: true, sizeMB };
-  } catch (error) {
+  } catch {
     return {
       valid: false,
       sizeMB: 0,

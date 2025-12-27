@@ -72,7 +72,11 @@ ${formattedTranscript}`;
 
   // Use the GPT-5.2 Responses API
   const openai = getOpenAIClient();
-  const response = await (openai as any).responses.create({
+  const response = await (
+    openai as unknown as {
+      responses: { create: (params: unknown) => Promise<{ output_text: string }> };
+    }
+  ).responses.create({
     ...CHAT_CONFIG,
     input: conversationMessages,
   });

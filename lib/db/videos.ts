@@ -90,6 +90,13 @@ export function updateVideoSummary(id: string, userIntent: string, summary: Summ
   `).run(userIntent, JSON.stringify(summary), id);
 }
 
+export function updateVideoSummaryOnly(id: string, summary: Summary): void {
+  const db = getDatabase();
+  db.prepare(`
+    UPDATE videos SET summary = ? WHERE id = ?
+  `).run(JSON.stringify(summary), id);
+}
+
 export function updateVideoTranscript(id: string, transcript: TranscriptSegment[]): void {
   const db = getDatabase();
   db.prepare(`

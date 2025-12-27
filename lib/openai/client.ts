@@ -37,6 +37,15 @@ export const CHAT_CONFIG = {
   text: { verbosity: 'medium' as Verbosity },
 };
 
+// GPT-4o-mini for chapter summaries (fast and cost-effective)
+export const CHAPTER_SUMMARY_MODEL = 'gpt-4o-mini';
+
+export const CHAPTER_SUMMARY_CONFIG = {
+  model: CHAPTER_SUMMARY_MODEL,
+  max_tokens: 300,
+  temperature: 0.3,
+};
+
 // Helper to format timestamp for display
 export function formatTimestamp(seconds: number): string {
   const h = Math.floor(seconds / 3600);

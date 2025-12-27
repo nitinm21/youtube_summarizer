@@ -1,5 +1,5 @@
-import { getOpenAIClient, SUMMARY_CONFIG, formatTimestamp } from './client';
-import type { TranscriptSegment, Summary } from '../types';
+import { getOpenAIClient, SUMMARY_CONFIG, CHAPTER_SUMMARY_CONFIG, formatTimestamp } from './client';
+import type { TranscriptSegment, Summary, SummarySection } from '../types';
 
 interface SummarizeInput {
   title: string;
@@ -71,7 +71,11 @@ IMPORTANT:
 
   // Use the GPT-5.2 Responses API
   const openai = getOpenAIClient();
-  const response = await (openai as any).responses.create({
+  const response = await (
+    openai as unknown as {
+      responses: { create: (params: unknown) => Promise<{ output_text: string }> };
+    }
+  ).responses.create({
     ...SUMMARY_CONFIG,
     input: [
       { role: 'system', content: systemPrompt },
@@ -196,4 +200,73 @@ function combineSummaries(summaries: Summary[]): Summary {
   combined.keyTakeaways = combined.keyTakeaways.slice(0, 5);
 
   return combined;
+}
+
+// Generate a high-level summary for a single chapter using GPT-4o-mini
+async function generateSingleChapterSummary(
+  section: SummarySection,
+  transcript: TranscriptSegment[],
+  userIntent: string
+): Promise<string> {
+  // Extract transcript segments within this chapter's time range
+  const relevantSegments = transcript.filter(
+    (seg) => seg.start >= section.startTime && seg.start < section.endTime
+  );
+
+  if (relevantSegments.length === 0) {
+    return 'No transcript available for this chapter.';
+  }
+
+  const formattedTranscript = relevantSegments
+    .map((seg) => `[${formatTimestamp(seg.start)}] ${seg.text}`)
+    .join('\n');
+
+  const prompt = `Summarize this video chapter in 3-4 sentences. Be concise and informative.
+
+Chapter Title: ${section.title}
+Duration: ${formatTimestamp(section.startTime)} - ${formatTimestamp(section.endTime)}
+
+User's Learning Goal: ${userIntent}
+
+Transcript:
+${formattedTranscript}
+
+Write a brief summary that:
+1. Describes the main topic or theme of this chapter
+2. Highlights key points discussed
+3. Notes if this is particularly relevant to the user's goal: "${userIntent}"
+
+Return only the summary text, no additional formatting.`;
+
+  const openai = getOpenAIClient();
+  const response = await openai.chat.completions.create({
+    ...CHAPTER_SUMMARY_CONFIG,
+    messages: [{ role: 'user', content: prompt }],
+  });
+
+  return response.choices[0]?.message?.content?.trim() || 'Summary unavailable.';
+}
+
+// Generate chapter summaries for all sections in parallel
+export async function generateChapterSummaries(
+  summary: Summary,
+  transcript: TranscriptSegment[],
+  userIntent: string
+): Promise<Summary> {
+  // Generate summaries for all chapters in parallel
+  const sectionsWithSummaries = await Promise.all(
+    summary.sections.map(async (section) => {
+      const chapterSummary = await generateSingleChapterSummary(
+        section,
+        transcript,
+        userIntent
+      );
+      return { ...section, summary: chapterSummary };
+    })
+  );
+
+  return {
+    ...summary,
+    sections: sectionsWithSummaries,
+  };
 }

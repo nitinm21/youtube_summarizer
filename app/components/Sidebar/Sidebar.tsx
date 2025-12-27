@@ -2,7 +2,6 @@
 
 import Image from 'next/image';
 import type { Video } from '@/lib/types';
-import { ThemeToggle } from '../ThemeToggle/ThemeToggle';
 import styles from './Sidebar.module.css';
 
 interface SidebarProps {
@@ -83,10 +82,6 @@ export function Sidebar({
             </button>
           ))
         )}
-      </div>
-
-      <div className={styles.footer}>
-        <ThemeToggle />
       </div>
     </aside>
   );

@@ -281,12 +281,12 @@ export function ChatPanel({
 
   // Fetch messages when active chat changes
   useEffect(() => {
-    if (activeChat) {
-      fetchMessages(activeChat.id);
-    } else {
+    if (!activeChat) {
       setMessages([]);
+      return;
     }
-  }, [activeChat?.id]);
+    fetchMessages(activeChat.id);
+  }, [activeChat]);
 
   // Scroll to bottom when messages change
   useEffect(() => {

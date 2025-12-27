@@ -30,6 +30,7 @@ export interface SummarySection {
   title: string;
   startTime: number;
   endTime: number;
+  summary?: string; // High-level chapter summary (3-4 sentences)
   points: TimestampedPoint[];
 }
 

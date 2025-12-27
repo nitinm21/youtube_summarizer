@@ -31,7 +31,7 @@ export async function downloadYouTubeAudio(youtubeId: string): Promise<AudioDown
 
     // Download audio only, best quality, convert to mp3 for Whisper compatibility
     // yt-dlp will add the extension automatically
-    const { stderr } = await execAsync(
+    await execAsync(
       `yt-dlp -x --audio-format mp3 --audio-quality 0 -o "${tempFilePath}.%(ext)s" "${url}"`,
       { maxBuffer: 10 * 1024 * 1024 }
     );
